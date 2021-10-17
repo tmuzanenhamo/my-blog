@@ -1,9 +1,8 @@
 <?php
 
-use App\Models\posts\Posts;
-use Illuminate\Support\Facades\File;
+use App\Models\Post\Post;
+use App\Models\Category\Category;
 use Illuminate\Support\Facades\Route;
-use Spatie\YamlFrontMatter\YamlFrontMatter;
 
 /*
 |--------------------------------------------------------------------------
@@ -17,15 +16,23 @@ use Spatie\YamlFrontMatter\YamlFrontMatter;
 */
 
 Route::get('/', function () {
-    return view('posts', ['posts' => Posts::all()]);
+    // eager load the posts to avoid the n+1 problems
+    return view('posts', ['posts' => Post::with('category')->get()]);
 });
 
-Route::get('posts/{post}', function ($slug) {
+Route::get('posts/{post:slug}', function (Post $post) {
     // Find a post by slug and pass it to the view
-    $post = Posts::findOrFail($slug);
 
     return view('post', [
         'post' => $post
     ]);
     // the regex below is to constrain the wildcard
+});
+
+Route::any('categories/{category:slug}', function (Category $category) {
+    // return all posts associated to a category
+
+    return view('categories', [
+        'posts' => $category->posts
+    ]);
 });
